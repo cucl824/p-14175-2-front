@@ -1,28 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { apiFetch, errorMessage, type PostDto } from "@/lib/api";
+import type { PostDto } from "@/lib/api";
+import { useApiData } from "@/lib/useApiData";
 
 export default function Page() {
-  const [posts, setPosts] = useState<PostDto[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let ignore = false;
-
-    apiFetch<PostDto[]>("/api/v1/posts")
-      .then((data) => {
-        if (!ignore) setPosts(data);
-      })
-      .catch((e) => {
-        if (!ignore) setError(errorMessage(e));
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
+  const { data: posts, error } = useApiData<PostDto[]>("/api/v1/posts");
 
   return (
     <>
