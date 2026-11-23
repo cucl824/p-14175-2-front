@@ -2,20 +2,16 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 import Page from "@/app/posts/[id]/page";
 import { mockFetch } from "./fetchMock";
+import { makePost } from "./fixtures";
 
 const params = vi.hoisted(() => ({ id: "1" }));
 
 vi.mock("next/navigation", () => ({
   useParams: () => params,
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
-const post1 = {
-  id: 1,
-  createDate: "2026-11-20T10:00:00",
-  modifyDate: "2026-11-20T10:00:00",
-  title: "제목 1",
-  content: "내용 1\n둘째 줄",
-};
+const post1 = makePost(1, { content: "내용 1\n둘째 줄" });
 
 beforeEach(() => {
   params.id = "1";

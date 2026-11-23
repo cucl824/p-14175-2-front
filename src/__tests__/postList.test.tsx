@@ -1,18 +1,12 @@
 import { render, screen } from "@testing-library/react";
+import { Activity } from "react";
 import { expect, test, vi } from "vitest";
 import Page from "@/app/posts/page";
 import { mockFetch } from "./fetchMock";
-
-const post = (id: number, title: string) => ({
-  id,
-  createDate: "2026-11-20T10:00:00",
-  modifyDate: "2026-11-20T10:00:00",
-  title,
-  content: `내용 ${id}`,
-});
+import { makePost } from "./fixtures";
 
 test("글 목록을 불러오는 동안 로딩을 보여주고, 제목을 상세 링크로 보여준다", async () => {
-  mockFetch([{ path: "/api/v1/posts", body: [post(1, "제목 1"), post(2, "제목 2")] }]);
+  mockFetch([{ path: "/api/v1/posts", body: [makePost(1), makePost(2)] }]);
 
   render(<Page />);
 
@@ -54,4 +48,31 @@ test("서버에 연결할 수 없으면 연결 오류를 보여준다", async ()
   render(<Page />);
 
   expect(await screen.findByRole("alert")).toHaveTextContent("서버에 연결할 수 없습니다.");
+});
+
+test("다른 화면에 다녀오면 예전 목록 대신 새로 조회한 목록을 보여준다", async () => {
+  // cacheComponents에서는 떠난 페이지가 Activity로 숨겨졌다가 다시 보인다.
+  mockFetch([{ path: "/api/v1/posts", body: [makePost(1), makePost(2)] }]);
+  const { rerender } = render(
+    <Activity mode="visible">
+      <Page />
+    </Activity>,
+  );
+  await screen.findByRole("link", { name: "제목 2" });
+
+  rerender(
+    <Activity mode="hidden">
+      <Page />
+    </Activity>,
+  );
+  mockFetch([{ path: "/api/v1/posts", body: [makePost(1)] }]);
+  rerender(
+    <Activity mode="visible">
+      <Page />
+    </Activity>,
+  );
+
+  expect(screen.queryByRole("link", { name: "제목 2" })).not.toBeInTheDocument();
+  expect(await screen.findByRole("link", { name: "제목 1" })).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "제목 2" })).not.toBeInTheDocument();
 });

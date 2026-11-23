@@ -1,17 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import type { PostDto } from "@/lib/api";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { apiFetch, errorMessage, type PostDto } from "@/lib/api";
 import { useApiData } from "@/lib/useApiData";
 
 export default function Page() {
+  const router = useRouter();
   const { id } = useParams<{ id: string }>();
   const isValidId = /^\d+$/.test(id);
   const { data: post, error: fetchError } = useApiData<PostDto>(
     isValidId ? `/api/v1/posts/${id}` : null,
   );
   const error = isValidId ? fetchError : "잘못된 글 번호입니다.";
+
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const deletePost = async () => {
+    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      await apiFetch(`/api/v1/posts/${id}`, { method: "DELETE" });
+      router.replace("/posts");
+    } catch (e) {
+      setDeleteError(errorMessage(e));
+      setIsDeleting(false);
+    }
+  };
 
   if (error !== null)
     return (
@@ -33,8 +53,22 @@ export default function Page() {
       <div>제목 : {post.title}</div>
       <div className="whitespace-pre-line">{post.content}</div>
 
+      {deleteError !== null && (
+        <div role="alert" className="text-red-600">
+          삭제하지 못했습니다. {deleteError}
+        </div>
+      )}
+
       <div className="flex gap-2 mt-2">
         <Link href="/posts">목록으로</Link>
+        <button
+          type="button"
+          onClick={deletePost}
+          disabled={isDeleting}
+          className="disabled:opacity-50"
+        >
+          삭제
+        </button>
       </div>
     </>
   );

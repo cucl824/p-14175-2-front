@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { apiFetch, errorMessage } from "@/lib/api";
 
 type State<T> = { path: string; data: T | null; error: string | null };
@@ -28,6 +28,12 @@ export function useApiData<T>(path: string | null) {
     return () => {
       ignore = true;
     };
+  }, [path]);
+
+  // cacheComponents에서는 떠난 페이지가 언마운트되지 않고 Activity로 숨겨진다.
+  // 숨겨질 때 결과를 비워, 다시 보일 때 예전 데이터 대신 로딩 후 새 데이터를 보여준다.
+  useLayoutEffect(() => {
+    return () => setState(null);
   }, [path]);
 
   // path가 바뀐 직후에는 이전 path의 결과를 보여주지 않는다.
