@@ -76,3 +76,12 @@ test("다른 화면에 다녀오면 예전 목록 대신 새로 조회한 목록
   expect(await screen.findByRole("link", { name: "제목 1" })).toBeInTheDocument();
   expect(screen.queryByRole("link", { name: "제목 2" })).not.toBeInTheDocument();
 });
+
+test("글 쓰기 화면으로 가는 링크가 있다", async () => {
+  mockFetch([{ path: "/api/v1/posts", body: [] }]);
+
+  render(<Page />);
+
+  expect(screen.getByRole("link", { name: "글 쓰기" })).toHaveAttribute("href", "/posts/write");
+  await screen.findByText("글이 없습니다.");
+});

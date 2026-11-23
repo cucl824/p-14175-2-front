@@ -1,5 +1,12 @@
 export const API_BASE_URL = "http://localhost:8080";
 
+/** 백엔드 RsData 응답 형식 (com.back.global.rsData.RsData) */
+export type RsData<T> = {
+  resultCode: string;
+  msg: string;
+  data: T;
+};
+
 export type PostDto = {
   id: number;
   createDate: string;

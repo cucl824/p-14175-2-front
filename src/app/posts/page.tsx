@@ -11,6 +11,10 @@ export default function Page() {
     <>
       <h1>글 목록</h1>
 
+      <div>
+        <Link href="/posts/write">글 쓰기</Link>
+      </div>
+
       {error !== null ? (
         <div role="alert" className="text-red-600">
           글 목록을 불러오지 못했습니다. {error}
