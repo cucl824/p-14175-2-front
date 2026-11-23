@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useLayoutEffect, useState } from "react";
+import CommentForm from "@/components/CommentForm";
 import { apiFetch, errorMessage, type PostCommentDto } from "@/lib/api";
 import { useApiData } from "@/lib/useApiData";
 
@@ -86,6 +87,18 @@ export default function PostComments({ postId }: { postId: number }) {
             </li>
           ))}
         </ul>
+      )}
+
+      {comments !== null && (
+        <CommentForm
+          postId={postId}
+          onWritten={(comment) =>
+            updateComments((list) =>
+              // 다시 조회한 목록에 이미 들어 있을 수 있다.
+              list.some((c) => c.id === comment.id) ? list : [...list, comment],
+            )
+          }
+        />
       )}
     </section>
   );

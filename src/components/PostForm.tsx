@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, useState, type FormEvent } from "react";
 import { errorMessage } from "@/lib/api";
+import { lengthError } from "@/lib/validation";
 
 export type PostFormValues = { title: string; content: string };
 
@@ -20,9 +21,8 @@ function validate(values: PostFormValues): FieldErrors {
   const errors: FieldErrors = {};
   for (const field of FIELDS) {
     const { label, min, max } = LIMITS[field];
-    const length = values[field].length;
-    if (length < min) errors[field] = `${label}을 ${min}자 이상 입력해주세요.`;
-    else if (length > max) errors[field] = `${label}은 ${max}자 이하로 입력해주세요.`;
+    const error = lengthError(label, values[field], min, max);
+    if (error !== null) errors[field] = error;
   }
   return errors;
 }
