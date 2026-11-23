@@ -41,18 +41,21 @@ export default function PostForm({ initialValues = EMPTY, submitLabel, onSubmit 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // 처음 받은 값으로만 되돌린다. 새 값으로 시작하려면 부모가 양식을 다시 마운트한다.
+  const initialValuesRef = useRef(initialValues);
   const inputRefs = useRef<Partial<Record<Field, HTMLInputElement | HTMLTextAreaElement | null>>>({});
 
   // cacheComponents에서는 떠난 페이지가 Activity로 숨겨진다.
   // 숨겨질 때 양식을 처음 상태로 되돌려, 다시 왔을 때 지난 입력이나 잠긴 버튼이 남지 않게 한다.
   useLayoutEffect(() => {
+    const initial = initialValuesRef.current;
     return () => {
-      setValues(initialValues);
+      setValues(initial);
       setFieldErrors({});
       setSubmitError(null);
       setIsSubmitting(false);
     };
-  }, [initialValues]);
+  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

@@ -27,6 +27,7 @@ test("URL의 id로 글을 조회해 번호·제목·본문을 보여준다", asy
   expect(screen.getByText("번호 : 1")).toBeInTheDocument();
   expect(screen.getByText(/내용 1/)).toHaveTextContent("내용 1 둘째 줄");
   expect(screen.getByRole("link", { name: "목록으로" })).toHaveAttribute("href", "/posts");
+  expect(screen.getByRole("link", { name: "수정" })).toHaveAttribute("href", "/posts/1/modify");
 });
 
 test("없는 글이면 오류와 목록 링크를 보여준다", async () => {
