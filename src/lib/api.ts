@@ -15,6 +15,13 @@ export type PostDto = {
   content: string;
 };
 
+export type PostCommentDto = {
+  id: number;
+  createDate: string;
+  modifyDate: string;
+  content: string;
+};
+
 /**
  * 백엔드 API를 호출하고 JSON 본문을 돌려준다.
  * 연결 실패나 실패 응답이면 사용자에게 보여줄 문구를 담은 Error를 던진다.

@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 import Page from "@/app/posts/[id]/page";
 import { mockFetch } from "./fetchMock";
-import { makePost } from "./fixtures";
+import { makePost, postDetailRoutes } from "./fixtures";
 
 const params = vi.hoisted(() => ({ id: "1" }));
 
@@ -18,7 +18,9 @@ beforeEach(() => {
 });
 
 test("URL의 id로 글을 조회해 번호·제목·본문을 보여준다", async () => {
-  mockFetch([{ path: "/api/v1/posts/1", body: post1 }]);
+  mockFetch([
+    ...postDetailRoutes(post1),
+  ]);
 
   render(<Page />);
 

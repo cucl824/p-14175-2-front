@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import PostComments from "@/components/PostComments";
 import PostLoadError from "@/components/PostLoadError";
 import { apiFetch, errorMessage } from "@/lib/api";
 import { usePost } from "@/lib/usePost";
@@ -60,6 +61,8 @@ export default function Page() {
           삭제
         </button>
       </div>
+
+      <PostComments postId={post.id} />
     </>
   );
 }

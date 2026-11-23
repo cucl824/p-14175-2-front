@@ -3,7 +3,7 @@ import { expect, test, vi } from "vitest";
 import Page from "@/app/posts/[id]/page";
 import { API_BASE_URL } from "@/lib/api";
 import { mockFetch } from "./fetchMock";
-import { makePost } from "./fixtures";
+import { makePost, postDetailRoutes } from "./fixtures";
 
 const router = vi.hoisted(() => ({ replace: vi.fn() }));
 
@@ -17,7 +17,7 @@ const post1 = makePost(1);
 test("삭제를 확인하면 글을 삭제하고 목록으로 이동한다", async () => {
   vi.spyOn(window, "confirm").mockReturnValue(true);
   const fetchMock = mockFetch([
-    { path: "/api/v1/posts/1", body: post1 },
+    ...postDetailRoutes(post1),
     {
       method: "DELETE",
       path: "/api/v1/posts/1",
@@ -37,19 +37,21 @@ test("삭제를 확인하면 글을 삭제하고 목록으로 이동한다", asy
 
 test("삭제를 취소하면 요청을 보내지 않는다", async () => {
   vi.spyOn(window, "confirm").mockReturnValue(false);
-  const fetchMock = mockFetch([{ path: "/api/v1/posts/1", body: post1 }]);
+  const fetchMock = mockFetch([
+    ...postDetailRoutes(post1),
+  ]);
 
   render(<Page />);
   fireEvent.click(await screen.findByRole("button", { name: "삭제" }));
 
-  expect(fetchMock).toHaveBeenCalledTimes(1);
+  expect(fetchMock.mock.calls.some(([, init]) => init?.method === "DELETE")).toBe(false);
   expect(router.replace).not.toHaveBeenCalled();
 });
 
 test("삭제 중에는 버튼을 막아 중복 요청을 보내지 않는다", async () => {
   vi.spyOn(window, "confirm").mockReturnValue(true);
   const fetchMock = mockFetch([
-    { path: "/api/v1/posts/1", body: post1 },
+    ...postDetailRoutes(post1),
     { method: "DELETE", path: "/api/v1/posts/1", body: { resultCode: "200-1", msg: "1번 글이 삭제되었습니다.", data: null } },
   ]);
 
@@ -67,7 +69,7 @@ test("삭제 중에는 버튼을 막아 중복 요청을 보내지 않는다", a
 test("삭제에 실패하면 오류를 보여주고 다시 시도할 수 있다", async () => {
   vi.spyOn(window, "confirm").mockReturnValue(true);
   mockFetch([
-    { path: "/api/v1/posts/1", body: post1 },
+    ...postDetailRoutes(post1),
     {
       method: "DELETE",
       path: "/api/v1/posts/1",
