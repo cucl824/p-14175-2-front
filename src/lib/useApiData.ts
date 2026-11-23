@@ -39,5 +39,13 @@ export function useApiData<T>(path: string | null) {
   // path가 바뀐 직후에는 이전 path의 결과를 보여주지 않는다.
   const current = state?.path === path ? state : null;
 
-  return { data: current?.data ?? null, error: current?.error ?? null };
+  /** 조회한 데이터를 화면에서 바로 고친다(예: 삭제 결과 반영). 데이터가 없으면 무시한다. */
+  const updateData = (update: (data: T) => T) =>
+    setState((prev) =>
+      prev !== null && prev.path === path && prev.data !== null
+        ? { ...prev, data: update(prev.data) }
+        : prev,
+    );
+
+  return { data: current?.data ?? null, error: current?.error ?? null, updateData };
 }
