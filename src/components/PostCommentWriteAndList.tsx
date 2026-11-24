@@ -100,11 +100,19 @@ function PostCommentListItem({
   postComment: PostCommentDto;
   postCommentsState: PostCommentsState;
 }) {
-  const { deleteComment: _deleteComment } = postCommentsState;
+  const { deleteComment: _deleteComment, modifyComment } = postCommentsState;
   const contentId = useId();
   // 삭제 진행·오류는 댓글마다 따로 가지므로 다른 댓글에 영향을 주지 않는다.
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  // 수정 모드도 댓글마다 따로 가진다.
+  const modifyInputId = useId();
+  const [modifyMode, setModifyMode] = useState(false);
+  const [modifyContent, setModifyContent] = useState(postComment.content);
+  const [modifyFieldError, setModifyFieldError] = useState<string | null>(null);
+  const [modifyError, setModifyError] = useState<string | null>(null);
+  const [isModifying, setIsModifying] = useState(false);
+  const modifyInputRef = useRef<HTMLTextAreaElement>(null);
 
   const deleteComment = async () => {
     if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
@@ -121,12 +129,96 @@ function PostCommentListItem({
     }
   };
 
+  const toggleModifyMode = () => {
+    // 열 때마다 지금 댓글 내용으로 다시 채운다.
+    if (!modifyMode) {
+      setModifyContent(postComment.content);
+      setModifyFieldError(null);
+      setModifyError(null);
+    }
+    setModifyMode(!modifyMode);
+  };
+
+  const handleModifySubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const trimmed = modifyContent.trim();
+    const error = lengthError("댓글", trimmed, CONTENT_MIN, CONTENT_MAX);
+    setModifyFieldError(error);
+    if (error !== null) {
+      modifyInputRef.current?.focus();
+      return;
+    }
+
+    setIsModifying(true);
+    setModifyError(null);
+
+    try {
+      await modifyComment(postComment.id, trimmed);
+      setModifyMode(false);
+    } catch (err) {
+      // 수정 폼과 입력은 그대로 두어 다시 시도할 수 있게 한다.
+      setModifyError(`댓글을 수정하지 못했습니다. ${errorMessage(err)}`);
+    }
+    setIsModifying(false);
+  };
+
   return (
     <li className="flex flex-col gap-1">
       <div className="flex gap-2">
-        <span id={contentId} className="whitespace-pre-line">
-          {postComment.content}
-        </span>
+        {!modifyMode && (
+          <span id={contentId} className="whitespace-pre-line">
+            {postComment.content}
+          </span>
+        )}
+
+        {modifyMode && (
+          <form onSubmit={handleModifySubmit} noValidate className="flex flex-col gap-1">
+            <div className="flex gap-2">
+              <label htmlFor={modifyInputId} className="sr-only">
+                댓글 수정 내용
+              </label>
+              <textarea
+                ref={modifyInputRef}
+                id={modifyInputId}
+                name="content"
+                value={modifyContent}
+                onChange={(e) => setModifyContent(e.target.value)}
+                maxLength={CONTENT_MAX}
+                rows={3}
+                autoFocus
+                aria-invalid={modifyFieldError !== null}
+                aria-describedby={modifyFieldError !== null ? `${modifyInputId}-error` : undefined}
+                className="border p-1"
+              />
+              <button
+                type="submit"
+                disabled={isModifying}
+                className="border p-1 disabled:opacity-50"
+              >
+                저장
+              </button>
+            </div>
+            <div id={`${modifyInputId}-error`} aria-live="polite" className="text-red-600">
+              {modifyFieldError}
+            </div>
+            {modifyError !== null && (
+              <div role="alert" className="text-red-600">
+                {modifyError}
+              </div>
+            )}
+          </form>
+        )}
+
+        <button
+          type="button"
+          onClick={toggleModifyMode}
+          disabled={isModifying}
+          aria-label={modifyMode ? "댓글 수정 취소" : "댓글 수정"}
+          className="disabled:opacity-50"
+        >
+          {modifyMode ? "수정취소" : "수정"}
+        </button>
         <button
           type="button"
           onClick={deleteComment}

@@ -32,5 +32,17 @@ export function usePostComments(postId: number | null) {
     updatePostComments((list) => list.filter((comment) => comment.id !== commentId));
   };
 
-  return { postComments, error, writeComment, deleteComment };
+  const modifyComment = async (commentId: number, content: string) => {
+    // 백엔드는 RsData 200-1만 돌려주므로(data 없음) 보낸 내용으로 화면을 고친다.
+    await apiFetch(`/api/v1/posts/${postId}/comments/${commentId}`, {
+      method: "PUT",
+      body: JSON.stringify({ content }),
+    });
+    // 수정한 댓글만 바꾸고 나머지 댓글은 그대로 둔다.
+    updatePostComments((list) =>
+      list.map((comment) => (comment.id === commentId ? { ...comment, content } : comment)),
+    );
+  };
+
+  return { postComments, error, writeComment, deleteComment, modifyComment };
 }
