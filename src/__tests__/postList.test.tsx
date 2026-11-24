@@ -38,7 +38,7 @@ test("목록 조회에 실패하면 오류를 보여준다", async () => {
 
   render(<Page />);
 
-  expect(await screen.findByRole("alert")).toHaveTextContent("요청에 실패했습니다. (500)");
+  expect(await screen.findByRole("alert")).toHaveTextContent("500-0 : 요청에 실패했습니다.");
   expect(screen.queryByText("로딩중...")).not.toBeInTheDocument();
 });
 
@@ -84,4 +84,14 @@ test("글 쓰기 화면으로 가는 링크가 있다", async () => {
 
   expect(screen.getByRole("link", { name: "글 쓰기" })).toHaveAttribute("href", "/posts/write");
   await screen.findByText("글이 없습니다.");
+});
+
+test("백엔드가 오류 응답을 주면 resultCode와 msg를 함께 보여준다", async () => {
+  mockFetch([
+    { path: "/api/v1/posts", status: 400, body: { resultCode: "400-1", msg: "잘못된 요청입니다." } },
+  ]);
+
+  render(<Page />);
+
+  expect(await screen.findByRole("alert")).toHaveTextContent("400-1 : 잘못된 요청입니다.");
 });

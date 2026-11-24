@@ -100,7 +100,7 @@ test("댓글 작성에 실패하면 입력을 남기고 오류를 보여준다",
   writeComment(section, "새 댓글");
 
   expect(await within(section).findByRole("alert")).toHaveTextContent(
-    "댓글을 작성하지 못했습니다. content-Size-크기가 2에서 100 사이여야 합니다",
+    "댓글을 작성하지 못했습니다. 400-1 : content-Size-크기가 2에서 100 사이여야 합니다",
   );
   expect(within(section).getByLabelText("댓글 내용")).toHaveValue("새 댓글");
   await waitFor(() =>
