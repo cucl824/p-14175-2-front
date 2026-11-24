@@ -165,7 +165,7 @@ function PostCommentListItem({
 
   return (
     <li className="flex flex-col gap-1">
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-start">
         {!modifyMode && (
           <span id={contentId} className="whitespace-pre-line">
             {postComment.content}
@@ -174,7 +174,7 @@ function PostCommentListItem({
 
         {modifyMode && (
           <form onSubmit={handleModifySubmit} noValidate className="flex flex-col gap-1">
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-start">
               <label htmlFor={modifyInputId} className="sr-only">
                 댓글 수정 내용
               </label>
