@@ -3,16 +3,15 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import PostComments from "@/components/PostComments";
+import PostCommentWriteAndList from "@/components/PostCommentWriteAndList";
 import PostLoadError from "@/components/PostLoadError";
-import { apiFetch, errorMessage } from "@/lib/api";
+import { errorMessage } from "@/lib/api";
 import { usePost } from "@/lib/usePost";
+import { usePostComments } from "@/lib/usePostComments";
 
-export default function Page() {
+function PostInfo({ postState }: { postState: ReturnType<typeof usePost> }) {
+  const { post, deletePost: _deletePost } = postState;
   const router = useRouter();
-  const { id } = useParams<{ id: string }>();
-  const { post, error } = usePost(id);
-
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -23,7 +22,7 @@ export default function Page() {
     setDeleteError(null);
 
     try {
-      await apiFetch(`/api/v1/posts/${id}`, { method: "DELETE" });
+      await _deletePost();
       router.replace("/posts");
     } catch (e) {
       setDeleteError(errorMessage(e));
@@ -31,14 +30,10 @@ export default function Page() {
     }
   };
 
-  if (error !== null) return <PostLoadError error={error} />;
-
-  if (post === null) return <div>로딩중...</div>;
+  if (post === null) return null;
 
   return (
     <>
-      <h1>글 상세페이지</h1>
-
       <div>번호 : {post.id}</div>
       <div>제목 : {post.title}</div>
       <div className="whitespace-pre-line">{post.content}</div>
@@ -61,8 +56,28 @@ export default function Page() {
           삭제
         </button>
       </div>
+    </>
+  );
+}
 
-      <PostComments postId={post.id} />
+export default function Page() {
+  // path 파라미터는 항상 문자열이다. 숫자로 바꾸고 검사하는 일은 usePost가 맡는다.
+  const { id: postIdStr } = useParams<{ id: string }>();
+  const postState = usePost(postIdStr);
+  // 댓글은 글을 불러온 뒤에만 조회한다.
+  const postCommentsState = usePostComments(postState.post === null ? null : postState.post.id);
+
+  if (postState.error !== null) return <PostLoadError error={postState.error} />;
+
+  if (postState.post === null) return <div>로딩중...</div>;
+
+  return (
+    <>
+      <h1>글 상세페이지</h1>
+
+      <PostInfo postState={postState} />
+
+      <PostCommentWriteAndList postCommentsState={postCommentsState} />
     </>
   );
 }
