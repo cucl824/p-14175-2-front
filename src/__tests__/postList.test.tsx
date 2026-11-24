@@ -38,7 +38,7 @@ test("목록 조회에 실패하면 오류를 보여준다", async () => {
 
   render(<Page />);
 
-  expect(await screen.findByRole("alert")).toHaveTextContent("요청에 실패했습니다. (500)");
+  expect(await screen.findByRole("alert")).toHaveTextContent("500-0 : 요청에 실패했습니다.");
   expect(screen.queryByText("로딩중...")).not.toBeInTheDocument();
 });
 

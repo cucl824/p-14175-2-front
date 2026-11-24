@@ -59,7 +59,8 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     if (typeof body?.resultCode === "string" && typeof body?.msg === "string") {
       throw new ApiError(body.resultCode, body.msg);
     }
-    throw new ApiError(`${res.status}-0`, `요청에 실패했습니다. (${res.status})`);
+    // 상태 코드는 resultCode에 담는다(예: 500-0).
+    throw new ApiError(`${res.status}-0`, "요청에 실패했습니다.");
   }
 
   return body as T;

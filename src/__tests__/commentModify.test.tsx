@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { Activity } from "react";
 import { expect, test, vi } from "vitest";
 import Page from "@/app/posts/[id]/page";
 import { mockFetch } from "./fetchMock";
@@ -28,7 +29,7 @@ test("수정을 누르면 기존 내용이 채워진 수정 폼이 열리고, �
 
   expect(within(item).getByLabelText("댓글 수정 내용")).toHaveValue("댓글 1-1");
   expect(within(item).getByRole("button", { name: "저장" })).toBeInTheDocument();
-  expect(within(item).getByRole("button", { name: "댓글 수정 취소" })).toHaveTextContent("수정취소");
+  expect(within(item).getByRole("button", { name: "댓글 수정취소" })).toHaveTextContent("수정취소");
 
   const other = await commentItem("댓글 1-2");
   expect(within(other).queryByRole("textbox")).not.toBeInTheDocument();
@@ -41,7 +42,7 @@ test("수정취소를 누르면 요청 없이 원래 내용으로 돌아간다",
   const item = await commentItem("댓글 1-1");
   fireEvent.click(within(item).getByRole("button", { name: "댓글 수정" }));
   fireEvent.change(within(item).getByLabelText("댓글 수정 내용"), { target: { value: "바꾸다 만 내용" } });
-  fireEvent.click(within(item).getByRole("button", { name: "댓글 수정 취소" }));
+  fireEvent.click(within(item).getByRole("button", { name: "댓글 수정취소" }));
 
   expect(within(item).queryByRole("textbox")).not.toBeInTheDocument();
   expect(within(item).getByText("댓글 1-1")).toBeInTheDocument();
@@ -138,4 +139,55 @@ test("수정에 실패하면 수정 폼과 입력을 남기고 resultCode·msg�
   expect(within(item).getByLabelText("댓글 수정 내용")).toHaveValue("고친 댓글");
   expect(within(item).getByRole("button", { name: "저장" })).toBeEnabled();
   expect(screen.getByText("댓글 1-2")).toBeInTheDocument();
+});
+
+test("수정 폼을 연 채로 다른 화면에 다녀오면 수정 폼이 닫혀 있다", async () => {
+  // cacheComponents에서는 떠난 페이지가 Activity로 숨겨졌다가 다시 보인다.
+  mockFetch(detailRoutes);
+  const { rerender } = render(
+    <Activity mode="visible">
+      <Page />
+    </Activity>,
+  );
+  const item = await commentItem("댓글 1-1");
+  fireEvent.click(within(item).getByRole("button", { name: "댓글 수정" }));
+
+  rerender(
+    <Activity mode="hidden">
+      <Page />
+    </Activity>,
+  );
+  rerender(
+    <Activity mode="visible">
+      <Page />
+    </Activity>,
+  );
+
+  const again = await commentItem("댓글 1-1");
+  expect(within(again).queryByRole("textbox")).not.toBeInTheDocument();
+});
+
+test("저장이 끝나면 포커스가 그 댓글의 수정 버튼으로 돌아온다", async () => {
+  mockFetch([...detailRoutes, modifySuccess]);
+
+  render(<Page />);
+  const item = await commentItem("댓글 1-1");
+  fireEvent.click(within(item).getByRole("button", { name: "댓글 수정" }));
+  fireEvent.change(within(item).getByLabelText("댓글 수정 내용"), { target: { value: "고친 댓글" } });
+  fireEvent.click(within(item).getByRole("button", { name: "저장" }));
+
+  await waitFor(() => expect(within(item).getByRole("button", { name: "댓글 수정" })).toHaveFocus());
+});
+
+test("수정 중에는 그 댓글의 삭제 버튼을 막는다", async () => {
+  mockFetch([...detailRoutes, modifySuccess]);
+
+  render(<Page />);
+  const item = await commentItem("댓글 1-1");
+  fireEvent.click(within(item).getByRole("button", { name: "댓글 수정" }));
+  fireEvent.change(within(item).getByLabelText("댓글 수정 내용"), { target: { value: "고친 댓글" } });
+  fireEvent.click(within(item).getByRole("button", { name: "저장" }));
+
+  expect(within(item).getByRole("button", { name: "댓글 삭제" })).toBeDisabled();
+  await waitFor(() => expect(within(item).getByRole("button", { name: "댓글 삭제" })).toBeEnabled());
 });

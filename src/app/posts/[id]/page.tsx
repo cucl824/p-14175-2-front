@@ -30,6 +30,7 @@ function PostInfo({ postState }: { postState: ReturnType<typeof usePost> }) {
     }
   };
 
+  // 부모가 글을 불러온 뒤에만 그리지만, 타입을 좁히기 위해 확인한다.
   if (post === null) return null;
 
   return (
@@ -65,7 +66,7 @@ export default function Page() {
   const { id: postIdStr } = useParams<{ id: string }>();
   const postState = usePost(postIdStr);
   // 댓글은 글을 불러온 뒤에만 조회한다.
-  const postCommentsState = usePostComments(postState.post === null ? null : postState.post.id);
+  const postCommentsState = usePostComments(postState.post === null ? null : postState.postId);
 
   if (postState.error !== null) return <PostLoadError error={postState.error} />;
 

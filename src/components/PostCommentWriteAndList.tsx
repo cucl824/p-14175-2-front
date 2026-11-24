@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type FormEvent } from "react";
 import { errorMessage, type PostCommentDto } from "@/lib/api";
 import type { usePostComments } from "@/lib/usePostComments";
 import { lengthError } from "@/lib/validation";
@@ -100,6 +100,7 @@ function PostCommentListItem({
   postComment: PostCommentDto;
   postCommentsState: PostCommentsState;
 }) {
+  // 강의(43강)처럼 훅의 함수 이름 앞에 _를 붙이고, 같은 이름으로 확인 단계를 감싼 함수를 만든다.
   const { deleteComment: _deleteComment, modifyComment } = postCommentsState;
   const contentId = useId();
   // 삭제 진행·오류는 댓글마다 따로 가지므로 다른 댓글에 영향을 주지 않는다.
@@ -113,6 +114,16 @@ function PostCommentListItem({
   const [modifyError, setModifyError] = useState<string | null>(null);
   const [isModifying, setIsModifying] = useState(false);
   const modifyInputRef = useRef<HTMLTextAreaElement>(null);
+  const modifyToggleRef = useRef<HTMLButtonElement>(null);
+  // 저장에 성공하면 사라진 저장 버튼 대신 수정 버튼으로 포커스를 돌려준다.
+  const returnFocusRef = useRef(false);
+
+  useEffect(() => {
+    if (!modifyMode && !isModifying && returnFocusRef.current) {
+      returnFocusRef.current = false;
+      modifyToggleRef.current?.focus();
+    }
+  }, [modifyMode, isModifying]);
 
   const deleteComment = async () => {
     if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
@@ -155,6 +166,7 @@ function PostCommentListItem({
 
     try {
       await modifyComment(postComment.id, trimmed);
+      returnFocusRef.current = true;
       setModifyMode(false);
     } catch (err) {
       // 수정 폼과 입력은 그대로 두어 다시 시도할 수 있게 한다.
@@ -184,7 +196,6 @@ function PostCommentListItem({
                 name="content"
                 value={modifyContent}
                 onChange={(e) => setModifyContent(e.target.value)}
-                maxLength={CONTENT_MAX}
                 rows={3}
                 autoFocus
                 aria-invalid={modifyFieldError !== null}
@@ -211,10 +222,11 @@ function PostCommentListItem({
         )}
 
         <button
+          ref={modifyToggleRef}
           type="button"
           onClick={toggleModifyMode}
-          disabled={isModifying}
-          aria-label={modifyMode ? "댓글 수정 취소" : "댓글 수정"}
+          disabled={isModifying || isDeleting}
+          aria-label={modifyMode ? "댓글 수정취소" : "댓글 수정"}
           className="disabled:opacity-50"
         >
           {modifyMode ? "수정취소" : "수정"}
@@ -222,9 +234,9 @@ function PostCommentListItem({
         <button
           type="button"
           onClick={deleteComment}
-          disabled={isDeleting}
+          disabled={isDeleting || isModifying}
           aria-label="댓글 삭제"
-          aria-describedby={contentId}
+          aria-describedby={modifyMode ? undefined : contentId}
           className="disabled:opacity-50"
         >
           삭제
