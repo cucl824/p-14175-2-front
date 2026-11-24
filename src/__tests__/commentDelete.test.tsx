@@ -84,7 +84,7 @@ test("댓글 삭제에 실패하면 댓글을 남기고 오류를 보여준다",
 
   const section = screen.getByRole("region", { name: "댓글" });
   expect(await within(section).findByRole("alert")).toHaveTextContent(
-    "댓글을 삭제하지 못했습니다. 해당 데이터가 존재하지 않습니다.",
+    "댓글을 삭제하지 못했습니다. 404-1 : 해당 데이터가 존재하지 않습니다.",
   );
   expect(screen.getByText("댓글 1-1")).toBeInTheDocument();
   expect(within(item).getByRole("button", { name: "댓글 삭제" })).toBeEnabled();

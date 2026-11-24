@@ -48,7 +48,7 @@ test("댓글 조회에 실패해도 글은 보이고 댓글 오류를 보여준�
 
   const section = await screen.findByRole("region", { name: "댓글" });
   expect(await within(section).findByRole("alert")).toHaveTextContent(
-    "댓글을 불러오지 못했습니다. 요청에 실패했습니다. (500)",
+    "댓글을 불러오지 못했습니다. 500-0 : 요청에 실패했습니다. (500)",
   );
   expect(screen.getByText("제목 : 제목 1")).toBeInTheDocument();
 });
